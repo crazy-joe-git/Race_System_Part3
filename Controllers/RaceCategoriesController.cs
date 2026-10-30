@@ -1,63 +1,62 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Race_System_2_.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using Race_System_2_.Models;
+using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace Race_System_2_.Controllers
 {
     public class RaceCategoriesController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
-        public RaceCategoriesController(ApplicationDbContext context)
+        public RaceCategoriesController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
-            _context = context;
+            _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
+        // GET: /RaceCategories/Index (Real-time Categories)
         public async Task<IActionResult> Index()
         {
-            return View(await _context.RaceCategories.ToListAsync());
-        }
+            var role = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(role))
+                return RedirectToAction("Login", "Account");
 
-        [Authorize(Roles = "Organiser")]
-        public IActionResult Create()
-        {
-            return View();
-        }
+            var categories = new List<CategoryViewModel>();
+            var client = _httpClientFactory.CreateClient();
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Organiser")]
-        public async Task<IActionResult> Create(RaceCategory category)
-        {
-            if (ModelState.IsValid)
+            var token = HttpContext.Session.GetString("JWTToken");
+            if (!string.IsNullOrEmpty(token))
             {
-                _context.Add(category);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
-            return View(category);
-        }
 
-        [Authorize(Roles = "Organiser")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-            var category = await _context.RaceCategories.FirstOrDefaultAsync(m => m.CategoryID == id);
-            if (category == null) return NotFound();
-            return View(category);
-        }
+            try
+            {
+                var response = await client.GetAsync($"{baseUrl}/api/RaceCategories");
+                if (response.IsSuccessStatusCode)
+                {
+                    var stream = await response.Content.ReadAsStreamAsync();
+                    var data = await JsonSerializer.DeserializeAsync<List<CategoryViewModel>>(stream, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (data != null) categories = data;
+                }
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ApiError = $"Unable to load categories: {ex.Message}";
+            }
 
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Organiser")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var category = await _context.RaceCategories.FindAsync(id);
-            if (category != null) _context.RaceCategories.Remove(category);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return View(categories);
         }
+    }
+
+    public class CategoryViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Distance { get; set; } = string.Empty;
+        public string AgeGroup { get; set; } = string.Empty;
     }
 }

@@ -1,51 +1,100 @@
-﻿@model IEnumerable<Race_System_2_.Models.Event>
-
+﻿@model IEnumerable<Race_System_2_.Models.EventViewModel>
 @{
-    ViewData["Title"] = "Events";
+    ViewData["Title"] = "Organiser Dashboard";
 }
 
-<div class="container mt-4">
-    <h2>Upcoming Race Events</h2>
-    <p class="text-muted">Browse upcoming runs, walks, and cycling events and note the Event ID for registration.</p>
+<div class="container py-4">
+    <!-- Dashboard Header & Action -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold text-primary mb-1">📊 Organiser Dashboard</h1>
+            <p class="text-muted mb-0">Manage your race events, track participant sign-ups, and publish official results.</p>
+        </div>
+        <div>
+            <a class="btn btn-primary fw-bold px-4 py-2 shadow-sm" asp-action="Create">
+                ➕ Create New Event
+            </a>
+        </div>
+    </div>
 
-    @if (User.IsInRole("Organiser"))
+    @if (TempData["SuccessMessage"] != null)
     {
-        <p>
-            <a asp-action="Create" class="btn btn-primary">+ Create New Event</a>
-        </p>
+        <div class="alert alert-success border-0 shadow-sm mb-4">
+            @TempData["SuccessMessage"]
+        </div>
     }
 
-    <div class="row">
-        @foreach (var item in Model)
-        {
-            <div class="col-md-4 mb-3">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="card-title mb-0">@item.EventName</h5>
-                            <span class="badge bg-secondary">Event ID: @item.EventID</span>
-                        </div>
-                        <h6 class="card-subtitle mb-2 text-muted">@item.EventType | @item.Distance km</h6>
-                        <p class="card-text">@item.Description</p>
-                        <ul class="list-unstyled small">
-                            <li><strong>Date:</strong> @item.EventDate.ToString("yyyy-MM-dd HH:mm")</li>
-                            <li><strong>Location:</strong> @item.EventLocation</li>
-                            <li><strong>Organizer:</strong> @item.OrganizerName</li>
-                        </ul>
-                    </div>
-                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center">
-                        <a asp-action="Details" asp-route-id="@item.EventID" class="btn btn-outline-info btn-sm">View Details</a>
-
-                        @if (User.IsInRole("Organiser"))
-                        {
-                            <div>
-                                <a asp-action="Edit" asp-route-id="@item.EventID" class="btn btn-outline-secondary btn-sm">Edit</a>
-                                <a asp-action="Delete" asp-route-id="@item.EventID" class="btn btn-outline-danger btn-sm">Delete</a>
-                            </div>
-                        }
-                    </div>
+    <!-- Metric Summary Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold text-uppercase mb-1">Total Events Managed</div>
+                    <h2 class="fw-extrabold text-dark display-6 mb-0">@Model.Count()</h2>
                 </div>
             </div>
-        }
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold text-uppercase mb-1">Total Enrolments</div>
+                    <h2 class="fw-extrabold text-primary display-6 mb-0">@Model.Sum(e => e.TotalEnrolments)</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold text-uppercase mb-1">Active Status</div>
+                    <h2 class="fw-extrabold text-success display-6 mb-0">Operational</h2>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+
+    <!-- Events Table Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 px-4 border-bottom">
+            <h3 class="h5 fw-bold text-dark mb-0">Your Created Events</h3>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-uppercase fs-7">
+                        <tr>
+                            <th class="py-3 px-4">Event Name</th>
+                            <th class="py-3">Date</th>
+                            <th class="py-3">Location</th>
+                            <th class="py-3">Distance / Type</th>
+                            <th class="py-3 text-center">Enrolments</th>
+                            <th class="py-3 text-end px-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="py-3 px-4 fw-bold text-dark">@item.Name</td>
+                                <td class="py-3 text-muted">@item.Date.ToString("yyyy-MM-dd")</td>
+                                <td class="py-3 text-muted">@item.Location</td>
+                                <td class="py-3">
+                                    <span class="badge bg-secondary">@item.Distance</span>
+                                    <span class="badge bg-info text-dark">@item.EventType</span>
+                                </td>
+                                <td class="py-3 text-center">
+                                    <span class="badge bg-primary px-3 py-2">@item.TotalEnrolments Runners</span>
+                                </td>
+                                <td class="py-3 text-end px-4">
+                                    <div class="btn-group" role="group">
+                                        <a asp-controller="Enrolments" asp-action="EventEnrolments" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary fw-semibold">View Enrolments</a>
+                                        <a asp-controller="Results" asp-action="Entry" asp-route-id="@item.Id" class="btn btn-sm btn-outline-success fw-semibold">Enter Results</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>  

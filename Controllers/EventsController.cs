@@ -1,125 +1,166 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Race_System_2_.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using Race_System_2_.Models;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace Race_System_2_.Controllers
 {
     public class EventsController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
-        public EventsController(ApplicationDbContext context)
+        public EventsController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
-            _context = context;
+            _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
-        // GET: Events
+        // GET: /Events/Index (Real-time Organiser Dashboard)
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Events.ToListAsync());
+            var role = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(role))
+            {
+                TempData["ErrorMessage"] = "Please log in to access the organiser dashboard.";
+                return RedirectToAction("Login", "Account");
+            }
+
+            var eventsList = new List<EventViewModel>();
+            var client = _httpClientFactory.CreateClient();
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
+
+            // Attach JWT Token to authorization header if present
+            var token = HttpContext.Session.GetString("JWTToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            try
+            {
+                // Fetch real-time events from API
+                var response = await client.GetAsync($"{baseUrl}/api/Events");
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseStream = await response.Content.ReadAsStreamAsync();
+                    var fetchedEvents = await JsonSerializer.DeserializeAsync<List<EventViewModel>>(
+                        responseStream,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+
+                    if (fetchedEvents != null)
+                    {
+                        eventsList = fetchedEvents;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ApiError = $"Could not connect to backend API ({ex.Message}). Ensure Part 2 API is running.";
+            }
+
+            return View(eventsList);
         }
 
-        // GET: Events/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var raceEvent = await _context.Events
-                .FirstOrDefaultAsync(m => m.EventID == id);
-
-            if (raceEvent == null) return NotFound();
-
-            return View(raceEvent);
-        }
-
-        // GET: Events/Create (Organiser Only)
-        [Authorize(Roles = "Organiser")]
+        // GET: /Events/Create
+        [HttpGet]
         public IActionResult Create()
         {
+            var role = HttpContext.Session.GetString("UserRole");
+            if (role != "Organiser" && role != "Organizer")
+            {
+                return RedirectToAction("Index", "Home");
+            }
             return View();
         }
 
-        // POST: Events/Create
+        // POST: /Events/Create (Posts real-time data to backend API)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Organiser")]
-        public async Task<IActionResult> Create([Bind("EventID,EventName,Description,EventDate,EventLocation,Distance,EventType,OrganizerName")] Event raceEvent)
+        public async Task<IActionResult> Create(EventViewModel model, IFormFile? bannerImage)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var client = _httpClientFactory.CreateClient();
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
+
+            var token = HttpContext.Session.GetString("JWTToken");
+            if (!string.IsNullOrEmpty(token))
             {
-                _context.Add(raceEvent);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
-            return View(raceEvent);
-        }
 
-        // GET: Events/Edit/5 (Organiser Only)
-        [Authorize(Roles = "Organiser")]
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var raceEvent = await _context.Events.FindAsync(id);
-            if (raceEvent == null) return NotFound();
-
-            return View(raceEvent);
-        }
-
-        // POST: Events/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Organiser")]
-        public async Task<IActionResult> Edit(int id, [Bind("EventID,EventName,Description,EventDate,EventLocation,Distance,EventType,OrganizerName")] Event raceEvent)
-        {
-            if (id != raceEvent.EventID) return NotFound();
-
-            if (ModelState.IsValid)
+            try
             {
-                try
+                using var multipartContent = new MultipartFormDataContent();
+
+                // Add text fields
+                multipartContent.Add(new StringContent(model.Name ?? ""), "Name");
+                multipartContent.Add(new StringContent(model.Description ?? ""), "Description");
+                multipartContent.Add(new StringContent(model.Date.ToString("o")), "Date");
+                multipartContent.Add(new StringContent(model.Location ?? ""), "Location");
+                multipartContent.Add(new StringContent(model.Distance ?? ""), "Distance");
+                multipartContent.Add(new StringContent(model.EventType ?? ""), "EventType");
+
+                // Add image file if uploaded (for Azure Blob Storage integration on API)
+                if (bannerImage != null && bannerImage.Length > 0)
                 {
-                    _context.Update(raceEvent);
-                    await _context.SaveChangesAsync();
+                    var streamContent = new StreamContent(bannerImage.OpenReadStream());
+                    streamContent.Headers.ContentType = new MediaTypeHeaderValue(bannerImage.ContentType);
+                    multipartContent.Add(streamContent, "bannerImage", bannerImage.FileName);
                 }
-                catch (DbUpdateConcurrencyException)
+
+                var response = await client.PostAsync($"{baseUrl}/api/Events", multipartContent);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    if (!_context.Events.Any(e => e.EventID == id)) return NotFound();
-                    else throw;
+                    TempData["SuccessMessage"] = "Event created and published in real-time!";
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction(nameof(Index));
+
+                ModelState.AddModelError(string.Empty, "API rejected the event creation. Please check required fields.");
             }
-            return View(raceEvent);
-        }
-
-        // GET: Events/Delete/5 (Organiser Only)
-        [Authorize(Roles = "Organiser")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var raceEvent = await _context.Events
-                .FirstOrDefaultAsync(m => m.EventID == id);
-
-            if (raceEvent == null) return NotFound();
-
-            return View(raceEvent);
-        }
-
-        // POST: Events/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Organiser")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var raceEvent = await _context.Events.FindAsync(id);
-            if (raceEvent != null)
+            catch (Exception ex)
             {
-                _context.Events.Remove(raceEvent);
+                ModelState.AddModelError(string.Empty, $"Error connecting to API: {ex.Message}");
             }
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return View(model);
+        }
+
+        // GET: /Events/Browse (Real-time Participant Discovery)
+        public async Task<IActionResult> Browse()
+        {
+            var eventsList = new List<EventViewModel>();
+            var client = _httpClientFactory.CreateClient();
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
+
+            try
+            {
+                var response = await client.GetAsync($"{baseUrl}/api/Events");
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseStream = await response.Content.ReadAsStreamAsync();
+                    var fetchedEvents = await JsonSerializer.DeserializeAsync<List<EventViewModel>>(
+                        responseStream,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+
+                    if (fetchedEvents != null)
+                    {
+                        eventsList = fetchedEvents;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Silently return empty list if API unreachable
+            }
+
+            return View(eventsList);
         }
     }
 }
