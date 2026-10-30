@@ -3,62 +3,167 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Race_System_2_</title>
+    <title>@ViewData["Title"] - RaceDay</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Race_System_2_.styles.css" asp-append-version="true" />
+    <style>
+        /* High-Contrast Accessible Athletic Theme */
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .navbar-custom {
+            background-color: #ffffff;
+            border-bottom: 3px solid #1e3a8a; /* Deep Navy Accord Accent */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .navbar-brand-custom {
+            color: #1e3a8a !important;
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-link-custom {
+            color: #334155 !important;
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-right: 8px;
+            padding: 8px 12px !important;
+            border-radius: 6px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nav-link-custom:hover {
+            background-color: #f1f5f9;
+            color: #1e3a8a !important;
+        }
+
+        .nav-link-organiser {
+            color: #9a3412 !important; /* Deep Warm Amber for contrast */
+            background-color: #fff7ed;
+        }
+
+        .nav-link-organiser:hover {
+            background-color: #ffedd5;
+            color: #7c2d12 !important;
+        }
+
+        .nav-link-participant {
+            color: #0369a1 !important; /* Deep Vibrant Blue */
+            background-color: #f0f9ff;
+        }
+
+        .nav-link-participant:hover {
+            background-color: #e0f2fe;
+            color: #075985 !important;
+        }
+
+        footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+    </style>
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Race_System_2_</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+        <nav class="navbar navbar-expand-lg navbar-custom py-2 mb-4">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand navbar-brand-custom d-flex align-items-center me-4" asp-controller="Home" asp-action="Index">
+                    <span class="me-2 fs-3">🏃</span> RACEDAY
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-Item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
+
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Events" asp-action="Index">Events</a>
+                            <a class="nav-link nav-link-custom" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="RaceCategories" asp-action="Index">Categories</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Registrations" asp-action="Index">Registrations</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Results" asp-action="Index">Results</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+
+                        @if (Context.Session.GetString("UserRole") == "Organiser" || Context.Session.GetString("UserRole") == "Organizer")
+                        {
+                            <!-- Organiser Navigation Links -->
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom nav-link-organiser fw-bold" asp-controller="Events" asp-action="Index">📊 Dashboard & Events</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom nav-link-organiser fw-bold" asp-controller="Categories" asp-action="Index">🏷️ Categories</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom nav-link-organiser fw-bold" asp-controller="Enrolments" asp-action="Index">📋 Enrolments</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom nav-link-organiser fw-bold" asp-controller="Results" asp-action="Index">🏆 Results Entry</a>
+                            </li>
+                        }
+                        else if (Context.Session.GetString("UserRole") == "Participant")
+                        {
+                            <!-- Participant Navigation Links -->
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom nav-link-participant fw-bold" asp-controller="Events" asp-action="Browse">🔍 Browse Races</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom nav-link-participant fw-bold" asp-controller="Enrolments" asp-action="MyEvents">🎟️ My Events</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom nav-link-participant fw-bold" asp-controller="Results" asp-action="MyResults">🏅 My Results</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom nav-link-participant fw-bold" asp-controller="Profile" asp-action="Index">👤 Profile</a>
+                            </li>
+                        }
                     </ul>
-                    <partial name="_LoginPartial" />
+
+                    <!-- Authentication Links -->
+                    <ul class="navbar-nav align-items-lg-center gap-2">
+                        @if (string.IsNullOrEmpty(Context.Session.GetString("UserId")))
+                        {
+                            <li class="nav-item">
+                                <a class="btn btn-outline-primary fw-bold px-3" asp-controller="Account" asp-action="Login">Log In</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary fw-bold px-3 shadow-sm" asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <span class="badge bg-primary fs-6 px-3 py-2 fw-semibold">
+                                    Role: @Context.Session.GetString("UserRole")
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger fw-bold btn-sm px-3">Log Out</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
 
-    <!-- flex-grow-1 makes this container expand to fill all remaining vertical space -->
-    <div class="container flex-grow-1">
-        <main role="main" class="pb-3">
+    <div class="container">
+        <main role="main" class="pb-5">
             @RenderBody()
         </main>
     </div>
 
-    <!-- mt-auto pushes the footer to the very bottom -->
-    <footer class="border-top footer text-muted mt-auto py-3 bg-light">
-        <div class="container text-center">
-            &copy; 2026 - Race_System_2_ - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="footer py-3 text-center">
+        <div class="container">
+            <span class="fw-semibold">&copy; 2026 - RaceDay Event Management Platform</span>
         </div>
     </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
