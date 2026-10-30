@@ -2,135 +2,80 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="container my-4">
-    @if (!User.Identity.IsAuthenticated)
-    {
-        <!-- Guest Hero Section -->
-        <div class="p-5 mb-4 bg-light rounded-3 shadow-sm text-center">
-            <h1 class="display-4 fw-bold text-primary">Welcome to Race System</h1>
-            <p class="lead text-secondary mt-2">Empowering athletes, organizers, and communities to run, compete, and excel together.</p>
+<div class="container-fluid px-0 my-3">
+    <!-- Split Hero Section -->
+    <div class="row g-0 align-items-center rounded-4 overflow-hidden shadow-sm border bg-white mb-5" style="min-height: 480px;">
 
-            <div class="card bg-white border-0 shadow-sm mx-auto my-4 style-quote" style="max-width: 650px;">
-                <div class="card-body p-4 text-center">
-                    <p class="fs-5 fst-italic text-dark mb-0">"The journey of a thousand miles begins with a single step."</p>
-                    <footer class="blockquote-footer mt-2 mb-0 text-primary fw-semibold">— Lao Tzu</footer>
-                </div>
+        <!-- Left Side: Color Theme & Call to Action (High Contrast & Accessible) -->
+        <div class="col-lg-6 p-5 d-flex flex-column justify-content-center" style="background: linear-gradient(135deg, #0a192f 0%, #1e3a8a 100%); color: #ffffff;">
+            <div class="mb-3">
+                <span class="badge bg-warning text-dark px-3 py-2 fw-bold text-uppercase rounded-pill">🏆 South Africa's Premier Race Hub</span>
+            </div>
+            <h1 class="display-5 fw-extrabold mb-3" style="letter-spacing: -0.5px;">
+                Conquer Every Milestone with <span style="text-decoration: underline; text-decoration-color: #f97316;">RaceDay</span>
+            </h1>
+            <p class="lead mb-4 text-light" style="opacity: 0.9;">
+                The ultimate platform connecting event organisers and runners. Seamless event creation, instant secure enrolments, and real-time finish tracking.
+            </p>
+
+            <div class="d-flex flex-wrap gap-3">
+                @if (string.IsNullOrEmpty(Context.Session.GetString("UserId")))
+                {
+                    <a class="btn btn-warning text-dark fw-bold px-4 py-3 shadow" asp-controller="Account" asp-action="Register">
+                        Get Started Free ➔
+                    </a>
+                    <a class="btn btn-outline-light fw-bold px-4 py-3" asp-controller="Account" asp-action="Login">
+                        Sign In
+                    </a>
+                }
+                else
+                {
+                    <div class="alert alert-light border-0 shadow-sm py-2 px-3 text-dark fw-bold mb-0">
+                        Welcome back, @Context.Session.GetString("UserRole")! Use the top navigation menu to manage your events.
+                    </div>
+                }
             </div>
 
-            <div class="mt-3">
-                <a class="btn btn-primary btn-lg me-2 px-4 shadow-sm" asp-area="Identity" asp-page="/Account/Register">Get Started & Register</a>
-                <a class="btn btn-outline-secondary btn-lg px-4" asp-area="Identity" asp-page="/Account/Login">Log In</a>
-            </div>
-        </div>
-    }
-    else if (User.IsInRole("Organizer"))
-    {
-        <!-- Organizer Hero Section -->
-        <div class="p-5 mb-4 bg-primary text-white rounded-3 shadow-sm text-center">
-            <h1 class="display-4 fw-bold">Organizer Management Portal</h1>
-            <p class="lead mt-2">Streamline your race management, registrations, and official updates in one centralized dashboard.</p>
-
-            <div class="card bg-white border-0 shadow-sm mx-auto my-4" style="max-width: 650px;">
-                <div class="card-body p-4 text-center">
-                    <p class="fs-5 fst-italic text-dark mb-0">"Leadership is not about being in charge. It is about taking care of those in your charge."</p>
-                    <footer class="blockquote-footer mt-2 mb-0 text-primary fw-semibold">— Simon Sinek</footer>
-                </div>
-            </div>
-        </div>
-    }
-    else if (User.IsInRole("Participant"))
-    {
-        <!-- Participant Hero Section -->
-        <div class="p-5 mb-4 bg-success text-white rounded-3 shadow-sm text-center">
-            <h1 class="display-4 fw-bold">Welcome Back, Racer!</h1>
-            <p class="lead mt-2">Your dedicated platform to track entries, discover new events, and achieve your personal best.</p>
-
-            <div class="card bg-white border-0 shadow-sm mx-auto my-4" style="max-width: 650px;">
-                <div class="card-body p-4 text-center">
-                    <p class="fs-5 fst-italic text-dark mb-0">"You don't have to be extreme, just consistent."</p>
-                    <footer class="blockquote-footer mt-2 mb-0 text-success fw-semibold">— Endurance Mindset</footer>
-                </div>
+            <div class="mt-4 pt-3 border-top border-secondary text-light small" style="opacity: 0.8;">
+                <em>"You don't have to be extreme, just consistent."</em>
             </div>
         </div>
-    }
-    else
-    {
-        <!-- Default Authenticated User View -->
-        <div class="p-5 mb-4 bg-light rounded-3 shadow-sm text-center">
-            <h1 class="display-4 fw-bold text-dark">Welcome to Race System</h1>
-            <p class="lead text-muted mt-2">Explore events, engage with the community, and keep moving forward.</p>
 
-            <div class="card bg-white border-0 shadow-sm mx-auto my-4" style="max-width: 650px;">
-                <div class="card-body p-4 text-center">
-                    <p class="fs-5 fst-italic text-dark mb-0">"Success is where preparation and opportunity meet."</p>
-                    <footer class="blockquote-footer mt-2 mb-0 text-secondary fw-semibold">— Arthur Ashe</footer>
-                </div>
-            </div>
+        <!-- Right Side: Race Track Image with Smooth Blend -->
+        <div class="col-lg-6 position-relative h-100" style="min-height: 480px; background: url('https://images.unsplash.com/photo-1530549387789-4c1017266635?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;">
+            <!-- Optional subtle gradient overlay on the edge where it meets the left side for a clean blend effect -->
+            <div class="position-absolute top-0 bottom-0 start-0 end-0" style="background: linear-gradient(90deg, rgba(10,25,47,0.3) 0%, rgba(0,0,0,0) 40%);"></div>
         </div>
-    }
+    </div>
 
-    <!-- About & Platform Overview Section -->
-    <div class="row g-4 my-4">
+    <!-- Features Overview Cards -->
+    <div class="row g-4 py-2">
         <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm p-3 text-center">
+            <div class="card h-100 border-0 shadow-sm p-3 rounded-4">
                 <div class="card-body">
-                    <div class="fs-1 text-primary mb-3">🏃</div>
-                    <h5 class="card-title fw-bold">Seamless Race Registration</h5>
-                    <p class="card-text text-muted">Easily browse upcoming marathons, sprints, and trail runs. Join events with just a few clicks and keep track of all your upcoming race schedules in one place.</p>
+                    <div class="fs-1 mb-3">🏃‍♂️</div>
+                    <h3 class="h5 fw-bold text-dark">Seamless Race Registration</h3>
+                    <p class="text-muted">Easily browse upcoming marathons, sprints, and trail runs. Join events with a single click and manage your personal schedule.</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm p-3 text-center">
+            <div class="card h-100 border-0 shadow-sm p-3 rounded-4">
                 <div class="card-body">
-                    <div class="fs-1 text-primary mb-3">📋</div>
-                    <h5 class="card-title fw-bold">Comprehensive Event Management</h5>
-                    <p class="card-text text-muted">Organizers get powerful tools to build event rosters, publish official announcements, manage participant logistics, and track race statistics seamlessly.</p>
+                    <div class="fs-1 mb-3">📋</div>
+                    <h3 class="h5 fw-bold text-dark">Comprehensive Management</h3>
+                    <p class="text-muted">Organisers get powerful tools to build event rosters, configure categories, upload banners, and track runner statistics.</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm p-3 text-center">
+            <div class="card h-100 border-0 shadow-sm p-3 rounded-4">
                 <div class="card-body">
-                    <div class="fs-1 text-primary mb-3">🏆</div>
-                    <h5 class="card-title fw-bold">Live Tracking & Milestones</h5>
-                    <p class="card-text text-muted">Stay motivated by tracking your personal best times, reviewing official standings, and connecting with fellow runners who share your passion for endurance sports.</p>
+                    <div class="fs-1 mb-3">⚡</div>
+                    <h3 class="h5 fw-bold text-dark">Live Timing & Milestones</h3>
+                    <p class="text-muted">Stay motivated by tracking your personal best times, reviewing official finish positions, and viewing verified results.</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Interactive Community Section -->
-    <div class="p-4 p-md-5 my-4 bg-white border rounded-3 shadow-sm">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <h3 class="fw-bold text-dark mb-2">Why Choose Race System?</h3>
-                <p class="text-secondary fs-5 mb-3">Whether you are attempting your first 5K or organizing a multi-stage city marathon, our platform bridges the gap between race directors and athletes.</p>
-                <ul class="list-unstyled text-muted lh-lg mb-0">
-                    <li>✔️ <strong>Real-Time Updates:</strong> Instant notifications on route changes, schedule shifts, and event notices.</li>
-                    <li>✔️ <strong>Secure Account Roles:</strong> Tailored portals designed specifically for organizers and participants.</li>
-                    <li>✔️ <strong>Community Driven:</strong> Built to foster sportsmanship, personal growth, and healthy competition.</li>
-                </ul>
-            </div>
-            <div class="col-lg-4 text-center mt-4 mt-lg-0">
-                <div class="p-3 bg-light rounded-3 border">
-                    <h2 class="display-6 fw-bold text-primary mb-1">100%</h2>
-                    <p class="text-muted fw-semibold mb-0">Dedicated to Endurance & Community</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if (!User.Identity.IsAuthenticated)
-    {
-        <!-- Bottom Quick Access Links for Guests -->
-        <div class="border-top pt-4 mt-5 text-center text-muted">
-            <p class="mb-2">Ready to take part in our next event?</p>
-            <div class="d-flex justify-content-center align-items-center gap-3">
-                <a class="btn btn-sm btn-outline-primary fw-bold px-3" asp-area="Identity" asp-page="/Account/Login">Log In</a>
-                <span class="text-muted">•</span>
-                <a class="btn btn-sm btn-primary fw-bold px-3" asp-area="Identity" asp-page="/Account/Register">Create an Account</a>
-            </div>
-        </div>
-    }
 </div>
