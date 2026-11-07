@@ -1,39 +1,53 @@
-﻿@model IEnumerable<Race_System_2_.Models.Result>
-
+﻿@model IEnumerable<Race_System_2_.Models.ResultViewModel>
 @{
-    ViewData["Title"] = "Results";
+    ViewData["Title"] = "My Results";
 }
 
-<div class="container mt-4">
-    <h2>Race Results</h2>
-    <p class="text-muted">Check final placement positions and recorded finish times.</p>
+<div class="container py-4">
+    <div class="mb-4">
+        <h1 class="fw-bold text-primary mb-1">My Results</h1>
+        <p class="text-muted">Review your official finish times and rankings across completed race events.</p>
+    </div>
 
-    @if (User.IsInRole("Organiser"))
+    @if (Model == null || !Model.Any())
     {
-        <p>
-            <a asp-action="Create" class="btn btn-primary">+ Capture New Result</a>
-        </p>
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+            <div class="card-body">
+                <h3 class="text-muted h5">No recorded results found yet.</h3>
+                <p class="text-muted small">Your official finish times will appear here once published by race organisers.</p>
+            </div>
+        </div>
     }
-
-    <table class="table table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>Result ID</th>
-                <th>Registration ID</th>
-                <th>Finishing Position</th>
-                <th>Finish Time</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.ResultID</td>
-                    <td><strong>@item.RegistrationID</strong></td>
-                    <td><span class="badge bg-success">Position: @item.Position</span></td>
-                    <td>@item.FinishTime</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-uppercase fs-7">
+                            <tr>
+                                <th class="py-3 px-4">Result ID</th>
+                                <th class="py-3">Registration ID</th>
+                                <th class="py-3">Finish Time</th>
+                                <th class="py-3 text-end px-4">Position</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var res in Model)
+                            {
+                                <tr>
+                                    <td class="py-3 px-4 fw-bold">#@res.ResultId</td>
+                                    <td class="py-3 text-muted">Registration #@res.RegistrationId</td>
+                                    <td class="py-3 fw-semibold text-dark">@res.FinishTime</td>
+                                    <td class="py-3 text-end px-4">
+                                        <span class="badge bg-success px-3 py-2">Position @res.Position</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
 </div>

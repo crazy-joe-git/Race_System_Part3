@@ -1,0 +1,45 @@
+﻿@model Race_System_2_.Models.ResultViewModel
+@{
+    ViewData["Title"] = "Capture Results";
+}
+
+<div class="row justify-content-center py-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <h2 class="fw-bold text-primary mb-3">Capture Race Result</h2>
+                <p class="text-muted mb-4">Enter finishing times and positions for registered participants.</p>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success border-0 shadow-sm mb-3">@TempData["SuccessMessage"]</div>
+                }
+
+                <form asp-action="Capture" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="RegistrationId" class="form-label fw-semibold">Registration ID</label>
+                        <input asp-for="RegistrationId" class="form-control" type="number" placeholder="e.g. 1" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FinishTime" class="form-label fw-semibold">Finish Time</label>
+                        <input asp-for="FinishTime" class="form-control" placeholder="e.g. 01:45:20" required />
+                        <div class="form-text">Format: HH:MM:SS</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Position" class="form-label fw-semibold">Finishing Position</label>
+                        <input asp-for="Position" class="form-control" type="number" placeholder="e.g. 1" required />
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-controller="Events" asp-action="Index" class="btn btn-light fw-bold px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm">Publish Result</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
