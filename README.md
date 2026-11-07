@@ -15,7 +15,7 @@ Race_System implements strict Role-Based Access Control (RBAC) to tailor the exp
    - Log and verify official finish times and results.
 
 2. **Participants:**
-   - Browse upcoming races and view detailed event information.
+   	- Browse upcoming races and view detailed event information.
    - Register and enrol in race categories securely.
    - Track personal entries, milestones, and review past race history.
    - Manage personal profile settings and view official results.

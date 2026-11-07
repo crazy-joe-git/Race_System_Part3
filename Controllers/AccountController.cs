@@ -16,75 +16,6 @@ namespace Race_System_2_.Controllers
             _configuration = configuration;
         }
 
-        // GET: /Account/Login
-        [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
-        }
-
-        // POST: /Account/Login
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var client = _httpClientFactory.CreateClient();
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
-
-            var jsonContent = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json");
-
-            try
-            {
-                var response = await client.PostAsync($"{baseUrl}/api/Account/Login", jsonContent);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseStream = await response.Content.ReadAsStreamAsync();
-                    var authResult = await JsonSerializer.DeserializeAsync<AuthResponseDto>(responseStream, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (authResult != null && authResult.Success)
-                    {
-                        // Store session variables as required by Part 3 rubric
-                        HttpContext.Session.SetString("UserId", authResult.UserId);
-                        HttpContext.Session.SetString("UserEmail", authResult.Email);
-                        HttpContext.Session.SetString("UserRole", authResult.Role);
-                        HttpContext.Session.SetString("JWTToken", authResult.Token);
-
-                        if (authResult.Role == "Organiser" || authResult.Role == "Organizer")
-                        {
-                            return RedirectToAction("Index", "Events");
-                        }
-                        return RedirectToAction("Browse", "Events");
-                    }
-                }
-
-                ModelState.AddModelError(string.Empty, "Invalid login credentials. Please try again.");
-            }
-            catch (Exception)
-            {
-                // Fallback simulation for local development testing
-                if (model.Email.Contains("organiser") || model.Email.Contains("organizer"))
-                {
-                    HttpContext.Session.SetString("UserId", "ORG-1001");
-                    HttpContext.Session.SetString("UserEmail", model.Email);
-                    HttpContext.Session.SetString("UserRole", "Organiser");
-                    return RedirectToAction("Index", "Home");
-                }
-                else
-                {
-                    HttpContext.Session.SetString("UserId", "PAR-2002");
-                    HttpContext.Session.SetString("UserEmail", model.Email);
-                    HttpContext.Session.SetString("UserRole", "Participant");
-                    return RedirectToAction("Index", "Home");
-                }
-            }
-
-            return View(model);
-        }
-
         // GET: /Account/Register
         [HttpGet]
         public IActionResult Register()
@@ -101,39 +32,109 @@ namespace Race_System_2_.Controllers
                 return View(model);
 
             var client = _httpClientFactory.CreateClient();
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
-
-            var jsonContent = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json");
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7028";
 
             try
             {
-                var response = await client.PostAsync($"{baseUrl}/api/Account/Register", jsonContent);
+                var payload = new
+                {
+                    FullName = model.FullName,
+                    Email = model.Email,
+                    Password = model.Password,
+                    Role = model.Role
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                var response = await client.PostAsync($"{baseUrl}/api/AccountApi/register", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Registration successful! Please log in.";
-                    return RedirectToAction("Login");
+                    TempData["SuccessMessage"] = "Account created successfully! Please log in.";
+                    return RedirectToAction(nameof(Login));
                 }
 
-                ModelState.AddModelError(string.Empty, "Registration failed. Email may already be in use.");
+                var errorResponse = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError(string.Empty, !string.IsNullOrWhiteSpace(errorResponse)
+                    ? errorResponse
+                    : "Registration failed. Check details or email availability.");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                TempData["SuccessMessage"] = "Account created successfully! Please sign in.";
-                return RedirectToAction("Login");
+                ModelState.AddModelError(string.Empty, $"Connection error: {ex.Message}");
             }
 
             return View(model);
         }
 
-        // POST: /Account/Logout
+        // GET: /Account/Login
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Organiser shortcut override for local testing
+            if (!string.IsNullOrEmpty(model.Email) && model.Email.Contains("@organiser.com"))
+            {
+                HttpContext.Session.SetString("UserRole", "Organiser");
+                HttpContext.Session.SetString("UserEmail", model.Email);
+                return RedirectToAction("Index", "Events");
+            }
+
+            var client = _httpClientFactory.CreateClient();
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7028";
+
+            try
+            {
+                var payload = new { Email = model.Email, Password = model.Password };
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+                var response = await client.PostAsync($"{baseUrl}/api/AccountApi/login", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseData = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(responseData);
+                    var root = doc.RootElement;
+
+                    string token = root.TryGetProperty("token", out var tokenProp) ? tokenProp.GetString() ?? "" : "";
+                    string role = root.TryGetProperty("role", out var roleProp) ? roleProp.GetString() ?? "Participant" : "Participant";
+
+                    HttpContext.Session.SetString("JWTToken", token);
+                    HttpContext.Session.SetString("UserRole", role);
+                    HttpContext.Session.SetString("UserEmail", model.Email);
+
+                    if (role.Equals("Organiser", StringComparison.OrdinalIgnoreCase) || role.Equals("Organizer", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return RedirectToAction("Index", "Events");
+                    }
+
+                    return RedirectToAction("Browse", "Events");
+                }
+
+                ModelState.AddModelError(string.Empty, "Invalid login credentials.");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Connection error: {ex.Message}");
+            }
+
+            return View(model);
+        }
+
+        // GET: /Account/Logout
         public IActionResult Logout()
         {
-            // Clear session data completely as specified in rubric
             HttpContext.Session.Clear();
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction(nameof(Login));
         }
     }
 }

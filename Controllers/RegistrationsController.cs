@@ -34,7 +34,7 @@ namespace Race_System_2_.Controllers
 
             try
             {
-                var response = await client.GetAsync($"{baseUrl}/api/Registrations");
+                var response = await client.GetAsync($"{baseUrl}/api/RegistrationsApi");
                 if (response.IsSuccessStatusCode)
                 {
                     var stream = await response.Content.ReadAsStreamAsync();
@@ -48,6 +48,55 @@ namespace Race_System_2_.Controllers
             }
 
             return View(registrations);
+        }
+
+        // POST: /Registrations/Enrol (Participant Instant Enrolment)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Enrol(int eventId)
+        {
+            var role = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(role))
+            {
+                TempData["ErrorMessage"] = "Please log in to enrol in events.";
+                return RedirectToAction("Login", "Account");
+            }
+
+            var client = _httpClientFactory.CreateClient();
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
+
+            var token = HttpContext.Session.GetString("JWTToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            try
+            {
+                var content = new StringContent(
+                    JsonSerializer.Serialize(new { EventId = eventId }),
+                    System.Text.Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await client.PostAsync($"{baseUrl}/api/RegistrationsApi", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Successfully enroled in the race event!";
+                    return RedirectToAction("Index", "Registrations");
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Could not complete enrolment. You may already be enroled.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Connection error: {ex.Message}";
+            }
+
+            return RedirectToAction("Browse", "Events");
         }
     }
 

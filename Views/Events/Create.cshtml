@@ -41,16 +41,12 @@
                         </div>
                     </div>
 
-                    <div class="row mb-4">
+                    <div class="row mb-3">
                         <div class="col-md-6">
-                            <label asp-for="Distance" class="form-label fw-semibold">Race Distance</label>
-                            <select asp-for="Distance" class="form-select">
-                                <option value="5km">5km Fun Run</option>
-                                <option value="10km">10km Road Race</option>
-                                <option value="21.1km">21.1km Half Marathon</option>
-                                <option value="42.2km">42.2km Full Marathon</option>
-                                <option value="Ultra">Ultra Marathon</option>
-                            </select>
+                            <label asp-for="Distance" class="form-label fw-bold">Race Distance</label>
+                            <input asp-for="Distance" class="form-control" placeholder="e.g. 3, 5, or 21.1" />
+                            <span asp-validation-for="Distance" class="text-danger small"></span>
+                            <div class="form-text">Enter value (e.g. 3 for 3km).</div>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="EventType" class="form-label fw-semibold">Event Type</label>
@@ -60,6 +56,7 @@
                                 <option value="Cross Country">Cross Country</option>
                                 <option value="Track">Track & Field</option>
                             </select>
+                            <span asp-validation-for="EventType" class="text-danger small"></span>
                         </div>
                     </div>
 

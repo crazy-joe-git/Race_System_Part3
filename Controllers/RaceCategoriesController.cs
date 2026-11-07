@@ -35,7 +35,7 @@ namespace Race_System_2_.Controllers
 
             try
             {
-                var response = await client.GetAsync($"{baseUrl}/api/RaceCategories");
+                var response = await client.GetAsync($"{baseUrl}/api/RaceCategoriesApi");
                 if (response.IsSuccessStatusCode)
                 {
                     var stream = await response.Content.ReadAsStreamAsync();
