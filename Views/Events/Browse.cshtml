@@ -1,70 +1,58 @@
 ﻿@model IEnumerable<Race_System_2_.Models.EventViewModel>
 @{
-    ViewData["Title"] = "Browse Races";
+    ViewData["Title"] = "Browse Events";
 }
 
 <div class="container py-4">
     <div class="mb-4">
-        <h1 class="fw-bold text-primary mb-1">🏃‍♂️ Upcoming Race Events</h1>
+        <h1 class="fw-bold text-primary mb-1">Upcoming Race Events</h1>
         <p class="text-muted">Discover marathons, trail runs, and road races across South Africa. Enrol instantly with a single click.</p>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success border-0 shadow-sm mb-4">
-            @TempData["SuccessMessage"]
-        </div>
+        <div class="alert alert-success border-0 shadow-sm mb-4">@TempData["SuccessMessage"]</div>
     }
-
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger border-0 shadow-sm mb-4">
-            @TempData["ErrorMessage"]
-        </div>
+        <div class="alert alert-danger border-0 shadow-sm mb-4">@TempData["ErrorMessage"]</div>
     }
 
-    @if (Model == null || !Model.Any())
-    {
-        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
-            <div class="card-body">
-                <h3 class="text-muted h5">No active race events found.</h3>
-                <p class="text-muted small">Check back soon or ask your event organiser to publish a new race.</p>
+    <div class="row g-4">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">No upcoming events available at the moment.</p>
             </div>
-        </div>
-    }
-    else
-    {
-        <div class="row g-4">
-            @foreach (var race in Model)
+        }
+        else
+        {
+            @foreach (var ev in Model)
             {
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden d-flex flex-column">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
                         <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
-                            <span class="badge bg-light text-primary fw-bold">@race.EventType</span>
-                            <span class="badge bg-secondary">@race.Distance km</span>
+                            <span class="badge bg-light text-primary fw-bold">@ev.EventType</span>
+                            <span class="badge bg-dark bg-opacity-25">@ev.Distance km</span>
                         </div>
                         <div class="card-body p-4 d-flex flex-column">
-                            <h3 class="h5 fw-bold text-dark mb-2">@race.Name</h3>
-                            <p class="text-muted small mb-3">@race.Description</p>
+                            <h3 class="h4 fw-bold text-dark mb-2">@ev.Name</h3>
+                            <p class="text-muted small mb-3">@ev.Description</p>
 
                             <div class="mt-auto">
-                                <ul class="list-unstyled text-muted small mb-4">
-                                    <li class="mb-1">📍 <strong>Location:</strong> @race.Location</li>
-                                    <li class="mb-1">📅 <strong>Date:</strong> @race.Date.ToString("yyyy-MM-dd HH:mm")</li>
-                                    <li>👤 <strong>Organiser:</strong> @race.OrganizerName</li>
-                                </ul>
+                                <p class="mb-1 text-muted small"><strong>Location:</strong> @ev.Location</p>
+                                <p class="mb-1 text-muted small"><strong>Date:</strong> @ev.Date.ToString("yyyy-MM-dd HH:mm")</p>
+                                <p class="mb-3 text-muted small"><strong>Organiser:</strong> @ev.OrganizerName</p>
 
                                 <form asp-controller="Registrations" asp-action="Enrol" method="post">
-                                    <input type="hidden" name="eventId" value="@race.Id" />
-                                    <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm">
-                                        ⚡ Enrol Now
-                                    </button>
+                                    <input type="hidden" name="eventId" value="@ev.Id" />
+                                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">Enrol Now</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </div>
             }
-        </div>
-    }
+        }
+    </div>
 </div>

@@ -71,8 +71,9 @@ namespace Race_System_2_.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(EventViewModel model, IFormFile? bannerImage)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            var role = HttpContext.Session.GetString("UserRole");
+            if (role != "Organiser" && role != "Organizer")
+                return RedirectToAction("Login", "Account");
 
             var client = _httpClientFactory.CreateClient();
             var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7028";
@@ -85,44 +86,38 @@ namespace Race_System_2_.Controllers
 
             try
             {
-                // Retrieve logged in user name to populate organizerName requirement
-                var organizerName = HttpContext.Session.GetString("UserName")
-                                    ?? HttpContext.Session.GetString("UserEmail")
-                                    ?? "Organiser";
+                var multiPartContent = new MultipartFormDataContent();
 
-                var apiPayload = new
+                multiPartContent.Add(new StringContent(model.Name ?? ""), "EventName");
+                multiPartContent.Add(new StringContent(model.Description ?? ""), "Description");
+                multiPartContent.Add(new StringContent(model.Date.ToString("yyyy-MM-ddTHH:mm:ss")), "EventDate");
+                multiPartContent.Add(new StringContent(model.Location ?? ""), "EventLocation");
+                multiPartContent.Add(new StringContent(model.Distance.ToString()), "Distance");
+                multiPartContent.Add(new StringContent(model.EventType ?? "Road"), "EventType");
+
+                var organizerName = HttpContext.Session.GetString("UserName") ?? HttpContext.Session.GetString("UserEmail") ?? "Organiser";
+                multiPartContent.Add(new StringContent(organizerName), "OrganizerName");
+
+                if (bannerImage != null && bannerImage.Length > 0)
                 {
-                    eventName = model.Name,
-                    description = model.Description ?? "",
-                    eventDate = model.Date,
-                    eventLocation = model.Location,
-                    distance = model.Distance,
-                    eventType = model.EventType ?? "Road",
-                    organizerName = organizerName
-                };          
+                    var fileStreamContent = new StreamContent(bannerImage.OpenReadStream());
+                    fileStreamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(bannerImage.ContentType);
+                    multiPartContent.Add(fileStreamContent, "bannerImage", bannerImage.FileName);
+                }
 
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(apiPayload),
-                    Encoding.UTF8,
-                    "application/json"
-                );
-
-                var response = await client.PostAsync($"{baseUrl}/api/ApiEvents", jsonContent);
-
+                var response = await client.PostAsync($"{baseUrl}/api/ApiEvents", multiPartContent);
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Event created and published in real-time!";
+                    TempData["SuccessMessage"] = "Event published successfully with Azure storage integration.";
                     return RedirectToAction(nameof(Index));
                 }
 
-                var apiErrorText = await response.Content.ReadAsStringAsync();
-                ModelState.AddModelError(string.Empty, !string.IsNullOrWhiteSpace(apiErrorText)
-                    ? $"API Error: {apiErrorText}"
-                    : "API rejected event creation.");
+                var error = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError(string.Empty, !string.IsNullOrWhiteSpace(error) ? error : "Could not create event.");
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Error connecting to API: {ex.Message}");
+                ModelState.AddModelError(string.Empty, $"Connection error: {ex.Message}");
             }
 
             return View(model);
