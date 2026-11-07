@@ -50,12 +50,7 @@
                         </div>
                         <div class="col-md-6">
                             <label asp-for="EventType" class="form-label fw-semibold">Event Type</label>
-                            <select asp-for="EventType" class="form-select">
-                                <option value="Road">Road Running</option>
-                                <option value="Trail">Trail Run</option>
-                                <option value="Cross Country">Cross Country</option>
-                                <option value="Track">Track & Field</option>
-                            </select>
+                            <input asp-for="EventType" class="form-control" placeholder="e.g. Running, Trail, Road, Walk" required />
                             <span asp-validation-for="EventType" class="text-danger small"></span>
                         </div>
                     </div>
