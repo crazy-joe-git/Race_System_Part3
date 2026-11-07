@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Race_System_2_.Models;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 
 namespace Race_System_2_.Controllers
@@ -15,7 +17,7 @@ namespace Race_System_2_.Controllers
             _configuration = configuration;
         }
 
-        // GET: /Registrations/Index (Real-time Enrolments/Registrations)
+        // GET: /Registrations/Index (Participant "My Events" View)
         public async Task<IActionResult> Index()
         {
             var role = HttpContext.Session.GetString("UserRole");
@@ -24,7 +26,7 @@ namespace Race_System_2_.Controllers
 
             var registrations = new List<RegistrationViewModel>();
             var client = _httpClientFactory.CreateClient();
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7028";
 
             var token = HttpContext.Session.GetString("JWTToken");
             if (!string.IsNullOrEmpty(token))
@@ -37,9 +39,12 @@ namespace Race_System_2_.Controllers
                 var response = await client.GetAsync($"{baseUrl}/api/RegistrationsApi");
                 if (response.IsSuccessStatusCode)
                 {
-                    var stream = await response.Content.ReadAsStreamAsync();
-                    var data = await JsonSerializer.DeserializeAsync<List<RegistrationViewModel>>(stream, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    if (data != null) registrations = data;
+                    var responseStream = await response.Content.ReadAsStreamAsync();
+                    var fetched = await JsonSerializer.DeserializeAsync<List<RegistrationViewModel>>(
+                        responseStream,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+                    if (fetched != null) registrations = fetched;
                 }
             }
             catch (Exception ex)
@@ -50,20 +55,20 @@ namespace Race_System_2_.Controllers
             return View(registrations);
         }
 
-        // POST: /Registrations/Enrol (Participant Instant Enrolment)
+        // POST: /Registrations/Enrol
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Enrol(int eventId)
+        public async Task<IActionResult> Enrol(int eventId, int categoryId = 1)
         {
             var role = HttpContext.Session.GetString("UserRole");
             if (string.IsNullOrEmpty(role))
             {
-                TempData["ErrorMessage"] = "Please log in to enrol in events.";
+                TempData["ErrorMessage"] = "Please log in as a participant to enrol in events.";
                 return RedirectToAction("Login", "Account");
             }
 
             var client = _httpClientFactory.CreateClient();
-            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
+            var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7028";
 
             var token = HttpContext.Session.GetString("JWTToken");
             if (!string.IsNullOrEmpty(token))
@@ -73,9 +78,19 @@ namespace Race_System_2_.Controllers
 
             try
             {
+                // Payload strictly structured per RegistrationsApi Swagger Schema
+                var payload = new
+                {
+                    eventRaceID = eventId,
+                    categoryID = categoryId,
+                    reg_Date = DateTime.UtcNow,
+                    paymentStatus = "Confirmed",
+                    bidNumber = new Random().Next(100, 999)
+                };
+
                 var content = new StringContent(
-                    JsonSerializer.Serialize(new { EventId = eventId }),
-                    System.Text.Encoding.UTF8,
+                    JsonSerializer.Serialize(payload),
+                    Encoding.UTF8,
                     "application/json"
                 );
 
@@ -88,7 +103,10 @@ namespace Race_System_2_.Controllers
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Could not complete enrolment. You may already be enroled.";
+                    var errorMsg = await response.Content.ReadAsStringAsync();
+                    TempData["ErrorMessage"] = !string.IsNullOrWhiteSpace(errorMsg)
+                        ? $"Enrolment Error: {errorMsg}"
+                        : "Could not complete enrolment. You may already be enroled.";
                 }
             }
             catch (Exception ex)
@@ -98,14 +116,5 @@ namespace Race_System_2_.Controllers
 
             return RedirectToAction("Browse", "Events");
         }
-    }
-
-    public class RegistrationViewModel
-    {
-        public int Id { get; set; }
-        public string AthleteName { get; set; } = string.Empty;
-        public string EventName { get; set; } = string.Empty;
-        public string Status { get; set; } = "Pending";
-        public DateTime EnroledDate { get; set; }
     }
 }

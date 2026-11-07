@@ -85,9 +85,11 @@ namespace Race_System_2_.Controllers
 
             try
             {
-                var organizerEmail = HttpContext.Session.GetString("UserEmail") ?? "Organiser";
+                // Retrieve logged in user name to populate organizerName requirement
+                var organizerName = HttpContext.Session.GetString("UserName")
+                                    ?? HttpContext.Session.GetString("UserEmail")
+                                    ?? "Organiser";
 
-                // JSON payload structured to match backend API schema exactly
                 var apiPayload = new
                 {
                     eventName = model.Name,
@@ -96,8 +98,8 @@ namespace Race_System_2_.Controllers
                     eventLocation = model.Location,
                     distance = model.Distance,
                     eventType = model.EventType ?? "Road",
-                    organizerName = organizerEmail
-                };
+                    organizerName = organizerName
+                };          
 
                 var jsonContent = new StringContent(
                     JsonSerializer.Serialize(apiPayload),

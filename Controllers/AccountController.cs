@@ -84,8 +84,12 @@ namespace Race_System_2_.Controllers
             // Organiser shortcut override for local testing
             if (!string.IsNullOrEmpty(model.Email) && model.Email.Contains("@organiser.com"))
             {
+                var derivedName = model.Email.Split('@')[0];
+                var formattedName = char.ToUpper(derivedName[0]) + derivedName.Substring(1);
+
                 HttpContext.Session.SetString("UserRole", "Organiser");
                 HttpContext.Session.SetString("UserEmail", model.Email);
+                HttpContext.Session.SetString("UserName", formattedName);
                 return RedirectToAction("Index", "Events");
             }
 
@@ -108,9 +112,13 @@ namespace Race_System_2_.Controllers
                     string token = root.TryGetProperty("token", out var tokenProp) ? tokenProp.GetString() ?? "" : "";
                     string role = root.TryGetProperty("role", out var roleProp) ? roleProp.GetString() ?? "Participant" : "Participant";
 
+                    // Extract name from response if available, or derive from email
+                    string userName = root.TryGetProperty("fullName", out var nameProp) ? nameProp.GetString() ?? model.Email.Split('@')[0] : model.Email.Split('@')[0];
+
                     HttpContext.Session.SetString("JWTToken", token);
                     HttpContext.Session.SetString("UserRole", role);
                     HttpContext.Session.SetString("UserEmail", model.Email);
+                    HttpContext.Session.SetString("UserName", userName);
 
                     if (role.Equals("Organiser", StringComparison.OrdinalIgnoreCase) || role.Equals("Organizer", StringComparison.OrdinalIgnoreCase))
                     {
