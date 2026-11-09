@@ -1,42 +1,45 @@
 ﻿@model Race_System_2_.Models.Event
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Event Details";
 }
 
-<h1>Details</h1>
+<div class="container mt-4">
+    <h1 class="mb-3">Event Details</h1>
 
-<div>
-    <h4>Event</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EventName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EventName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EventDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EventDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EventLocation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EventLocation)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrganizerName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrganizerName)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.EventID">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    @if (!string.IsNullOrEmpty(Model.BannerUrl))
+    {
+        <div class="mb-4">
+            <img src="@Model.BannerUrl" alt="Event Banner" class="img-fluid rounded shadow-sm w-100" style="max-height: 350px; object-fit: cover;" />
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 p-4 mb-4">
+        <h4 class="mb-3 text-primary fw-bold">@Model.EventName</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2 fw-semibold">Description</dt>
+            <dd class="col-sm-10">@Html.DisplayFor(model => model.Description)</dd>
+
+            <dt class="col-sm-2 fw-semibold">@Html.DisplayNameFor(model => model.EventDate)</dt>
+            <dd class="col-sm-10">@Html.DisplayFor(model => model.EventDate)</dd>
+
+            <dt class="col-sm-2 fw-semibold">@Html.DisplayNameFor(model => model.EventLocation)</dt>
+            <dd class="col-sm-10">@Html.DisplayFor(model => model.EventLocation)</dd>
+
+            <dt class="col-sm-2 fw-semibold">Distance</dt>
+            <dd class="col-sm-10">@Model.Distance km</dd>
+
+            <dt class="col-sm-2 fw-semibold">Type</dt>
+            <dd class="col-sm-10">@Model.EventType</dd>
+
+            <dt class="col-sm-2 fw-semibold">@Html.DisplayNameFor(model => model.OrganizerName)</dt>
+            <dd class="col-sm-10">@Html.DisplayFor(model => model.OrganizerName)</dd>
+        </dl>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model?.EventID" class="btn btn-primary btn-sm px-3">Edit</a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm px-3">Back to List</a>
+    </div>
 </div>

@@ -2,80 +2,48 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="container-fluid px-0 my-3">
-    <!-- Split Hero Section -->
-    <div class="row g-0 align-items-center rounded-4 overflow-hidden shadow-sm border bg-white mb-5" style="min-height: 480px;">
-
-        <!-- Left Side: Color Theme & Call to Action (High Contrast & Accessible) -->
-        <div class="col-lg-6 p-5 d-flex flex-column justify-content-center" style="background: linear-gradient(135deg, #0a192f 0%, #1e3a8a 100%); color: #ffffff;">
-            <div class="mb-3">
-                <span class="badge bg-warning text-dark px-3 py-2 fw-bold text-uppercase rounded-pill">🏆 South Africa's Premier Race Hub</span>
-            </div>
-            <h1 class="display-5 fw-extrabold mb-3" style="letter-spacing: -0.5px;">
-                Conquer Every Milestone with <span style="text-decoration: underline; text-decoration-color: #f97316;">RaceDay</span>
-            </h1>
-            <p class="lead mb-4 text-light" style="opacity: 0.9;">
-                The ultimate platform connecting event organisers and runners. Seamless event creation, instant secure enrolments, and real-time finish tracking.
-            </p>
-
-            <div class="d-flex flex-wrap gap-3">
-                @if (string.IsNullOrEmpty(Context.Session.GetString("UserId")))
-                {
-                    <a class="btn btn-warning text-dark fw-bold px-4 py-3 shadow" asp-controller="Account" asp-action="Register">
-                        Get Started Free ➔
-                    </a>
-                    <a class="btn btn-outline-light fw-bold px-4 py-3" asp-controller="Account" asp-action="Login">
-                        Sign In
-                    </a>
-                }
-                else
-                {
-                    <div class="alert alert-light border-0 shadow-sm py-2 px-3 text-dark fw-bold mb-0">
-                        Welcome back, @Context.Session.GetString("UserRole")! Use the top navigation menu to manage your events.
-                    </div>
-                }
-            </div>
-
-            <div class="mt-4 pt-3 border-top border-secondary text-light small" style="opacity: 0.8;">
-                <em>"You don't have to be extreme, just consistent."</em>
-            </div>
+<div class="p-5 mb-4 bg-dark text-white rounded-3 shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);">
+    <div class="container-fluid py-5">
+        <span class="badge bg-warning text-dark mb-3 px-3 py-2 fw-semibold">RaceDay</span>
+        <h1 class="display-4 fw-bold mb-3">Conquer Every Milestone with RaceDay</h1>
+        <p class="col-md-8 fs-5 text-light mb-4">
+            The ultimate platform connecting event organisers and runners. Seamless event creation, instant secure enrolments, and real-time finish tracking.
+        </p>
+        <div class="d-flex gap-3">
+            <a class="btn btn-warning btn-lg px-4 fw-semibold text-dark" asp-controller="Events" asp-action="Index">Browse Races</a>
         </div>
+        <p class="mt-4 text-muted fst-italic small">"You don't have to be extreme, just consistent."</p>
+    </div>
+</div>
 
-        <!-- Right Side: Race Track Image with Smooth Blend -->
-        <div class="col-lg-6 position-relative h-100" style="min-height: 480px; background: url('https://images.unsplash.com/photo-1530549387789-4c1017266635?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;">
-            <!-- Optional subtle gradient overlay on the edge where it meets the left side for a clean blend effect -->
-            <div class="position-absolute top-0 bottom-0 start-0 end-0" style="background: linear-gradient(90deg, rgba(10,25,47,0.3) 0%, rgba(0,0,0,0) 40%);"></div>
+<!-- Feature Grid -->
+<div class="row g-4 py-3 row-cols-1 row-cols-md-3">
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0 p-3">
+            <div class="card-body">
+                <div class="text-primary mb-3 fs-3"><i class="fa-solid fa-ticket"></i></div>
+                <h3 class="h5 fw-bold">Seamless Race Registration</h3>
+                <p class="text-muted">Easily browse upcoming marathons, sprints, and trail runs. Join events with a single click and manage your personal schedule.</p>
+            </div>
         </div>
     </div>
-
-    <!-- Features Overview Cards -->
-    <div class="row g-4 py-2">
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm p-3 rounded-4">
-                <div class="card-body">
-                    <div class="fs-1 mb-3">🏃‍♂️</div>
-                    <h3 class="h5 fw-bold text-dark">Seamless Race Registration</h3>
-                    <p class="text-muted">Easily browse upcoming marathons, sprints, and trail runs. Join events with a single click and manage your personal schedule.</p>
-                </div>
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0 p-3">
+            <div class="card-body">
+                <div class="text-primary mb-3 fs-3"><i class="fa-solid fa-sliders"></i></div>
+                <h3 class="h5 fw-bold">Comprehensive Management</h3>
+                <p class="text-muted">Organisers get powerful tools to build event rosters, configure categories, upload banners via Azure Blob Storage, and track runner statistics.</p>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm p-3 rounded-4">
-                <div class="card-body">
-                    <div class="fs-1 mb-3">📋</div>
-                    <h3 class="h5 fw-bold text-dark">Comprehensive Management</h3>
-                    <p class="text-muted">Organisers get powerful tools to build event rosters, configure categories, upload banners, and track runner statistics.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm p-3 rounded-4">
-                <div class="card-body">
-                    <div class="fs-1 mb-3">⚡</div>
-                    <h3 class="h5 fw-bold text-dark">Live Timing & Milestones</h3>
-                    <p class="text-muted">Stay motivated by tracking your personal best times, reviewing official finish positions, and viewing verified results.</p>
-                </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0 p-3">
+            <div class="card-body">
+                <div class="text-primary mb-3 fs-3"><i class="fa-solid fa-stopwatch"></i></div>
+                <h3 class="h5 fw-bold">Live Timing & Milestones</h3>
+                <p class="text-muted">Stay motivated by tracking your personal best times, reviewing official finish positions, and viewing verified results.</p>
             </div>
         </div>
     </div>
 </div>
+

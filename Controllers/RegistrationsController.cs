@@ -17,13 +17,9 @@ namespace Race_System_2_.Controllers
             _configuration = configuration;
         }
 
-        // GET: /Registrations/Index (Participant "My Events" View)
-        public async Task<IActionResult> Index()
+        // GET: /Registrations/MyEvents (Participant Enrolled Races View)
+        public async Task<IActionResult> MyEvents()
         {
-            var role = HttpContext.Session.GetString("UserRole");
-            if (string.IsNullOrEmpty(role))
-                return RedirectToAction("Login", "Account");
-
             var registrations = new List<RegistrationViewModel>();
             var client = _httpClientFactory.CreateClient();
             var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7028";
@@ -55,18 +51,14 @@ namespace Race_System_2_.Controllers
             return View(registrations);
         }
 
+        // Alias Index to MyEvents so both URLs resolve correctly
+        public async Task<IActionResult> Index() => await MyEvents();
+
         // POST: /Registrations/Enrol
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Enrol(int eventId, int categoryId = 1)
         {
-            var role = HttpContext.Session.GetString("UserRole");
-            if (string.IsNullOrEmpty(role))
-            {
-                TempData["ErrorMessage"] = "Please log in as a participant to enrol in events.";
-                return RedirectToAction("Login", "Account");
-            }
-
             var client = _httpClientFactory.CreateClient();
             var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7028";
 
@@ -78,7 +70,6 @@ namespace Race_System_2_.Controllers
 
             try
             {
-                // Payload strictly structured per RegistrationsApi Swagger Schema
                 var payload = new
                 {
                     eventRaceID = eventId,
@@ -98,15 +89,15 @@ namespace Race_System_2_.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "Successfully enroled in the race event!";
-                    return RedirectToAction("Index", "Registrations");
+                    TempData["SuccessMessage"] = "Successfully enrolled in the race event!";
+                    return RedirectToAction(nameof(MyEvents));
                 }
                 else
                 {
                     var errorMsg = await response.Content.ReadAsStringAsync();
                     TempData["ErrorMessage"] = !string.IsNullOrWhiteSpace(errorMsg)
                         ? $"Enrolment Error: {errorMsg}"
-                        : "Could not complete enrolment. You may already be enroled.";
+                        : "Could not complete enrolment. You may already be enrolled.";
                 }
             }
             catch (Exception ex)
@@ -114,7 +105,7 @@ namespace Race_System_2_.Controllers
                 TempData["ErrorMessage"] = $"Connection error: {ex.Message}";
             }
 
-            return RedirectToAction("Browse", "Events");
+            return RedirectToAction("Index", "Events");
         }
     }
 }

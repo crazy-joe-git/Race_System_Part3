@@ -66,6 +66,13 @@ namespace Race_System_2_.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult MyResults()
+        {
+            // Return view showing participant race results aligned with POE requirements
+            return View();
+        }
+
         // POST: /Results/Capture
         [HttpPost]
         [ValidateAntiForgeryToken]
