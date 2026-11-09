@@ -16,14 +16,9 @@ namespace Race_System_2_.Controllers
             _configuration = configuration;
         }
 
-        // GET: /Account/Register
         [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
+        public IActionResult Register() => View();
 
-        // POST: /Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
@@ -66,14 +61,9 @@ namespace Race_System_2_.Controllers
             return View(model);
         }
 
-        // GET: /Account/Login
         [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
-        }
+        public IActionResult Login() => View();
 
-        // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -81,15 +71,17 @@ namespace Race_System_2_.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Organiser shortcut override for local testing
+            // Local organiser shortcut override for local testing
             if (!string.IsNullOrEmpty(model.Email) && model.Email.Contains("@organiser.com"))
             {
                 var derivedName = model.Email.Split('@')[0];
                 var formattedName = char.ToUpper(derivedName[0]) + derivedName.Substring(1);
 
                 HttpContext.Session.SetString("UserRole", "Organiser");
-                HttpContext.Session.SetString("UserEmail", model.Email);
                 HttpContext.Session.SetString("UserName", formattedName);
+                HttpContext.Session.SetString("UserEmail", model.Email);
+                HttpContext.Session.SetString("JWTToken", "local-test-token");
+
                 return RedirectToAction("Index", "Events");
             }
 
@@ -111,8 +103,6 @@ namespace Race_System_2_.Controllers
 
                     string token = root.TryGetProperty("token", out var tokenProp) ? tokenProp.GetString() ?? "" : "";
                     string role = root.TryGetProperty("role", out var roleProp) ? roleProp.GetString() ?? "Participant" : "Participant";
-
-                    // Extract name from response if available, or derive from email
                     string userName = root.TryGetProperty("fullName", out var nameProp) ? nameProp.GetString() ?? model.Email.Split('@')[0] : model.Email.Split('@')[0];
 
                     HttpContext.Session.SetString("JWTToken", token);
@@ -120,12 +110,7 @@ namespace Race_System_2_.Controllers
                     HttpContext.Session.SetString("UserEmail", model.Email);
                     HttpContext.Session.SetString("UserName", userName);
 
-                    if (role.Equals("Organiser", StringComparison.OrdinalIgnoreCase) || role.Equals("Organizer", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return RedirectToAction("Index", "Events");
-                    }
-
-                    return RedirectToAction("Browse", "Events");
+                    return RedirectToAction("Index", "Events");
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid login credentials.");
@@ -138,7 +123,8 @@ namespace Race_System_2_.Controllers
             return View(model);
         }
 
-        // GET: /Account/Logout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();

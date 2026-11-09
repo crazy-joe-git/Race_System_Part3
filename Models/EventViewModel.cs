@@ -1,31 +1,40 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Race_System_2_.Models
+﻿namespace Race_System_2_.Models
 {
     public class EventViewModel
     {
-        [JsonPropertyName("eventID")]
-        public int Id { get; set; }
+        public int EventId { get; set; }
+        public int Id
+        {
+            get => EventId;
+            set => EventId = value;
+        }
 
-        [JsonPropertyName("eventName")]
-        public string Name { get; set; } = string.Empty;
+        public string EventName { get; set; } = string.Empty;
+        public string Name
+        {
+            get => EventName;
+            set => EventName = value;
+        }
 
-        [JsonPropertyName("description")]
         public string Description { get; set; } = string.Empty;
 
-        [JsonPropertyName("eventDate")]
-        public DateTime Date { get; set; }
+        public DateTime EventDate { get; set; }
+        public DateTime Date
+        {
+            get => EventDate;
+            set => EventDate = value;
+        }
 
-        [JsonPropertyName("eventLocation")]
-        public string Location { get; set; } = string.Empty;
+        public string EventLocation { get; set; } = string.Empty;
+        public string Location
+        {
+            get => EventLocation;
+            set => EventLocation = value;
+        }
 
-        [JsonPropertyName("distance")]
         public double Distance { get; set; }
-
-        [JsonPropertyName("eventType")]
         public string EventType { get; set; } = string.Empty;
-
-        [JsonPropertyName("organizerName")]
         public string OrganizerName { get; set; } = string.Empty;
+        public string BannerUrl { get; set; } = string.Empty;
     }
 }

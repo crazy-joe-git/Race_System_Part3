@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Race_System_2_.Controllers
 {
-    [Authorize]
     public class ProfileController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -15,31 +14,89 @@ namespace Race_System_2_.Controllers
             _userManager = userManager;
         }
 
+        private async Task<IdentityUser> GetCurrentUserAsync()
+        {
+            var email = HttpContext.Session.GetString("UserEmail");
+            var userName = HttpContext.Session.GetString("UserName");
+
+            IdentityUser? user = null;
+            if (!string.IsNullOrEmpty(email))
+            {
+                user = await _userManager.FindByEmailAsync(email);
+            }
+            if (user == null && !string.IsNullOrEmpty(userName))
+            {
+                user = await _userManager.FindByNameAsync(userName);
+            }
+
+            // Fallback for local test bypass accounts (like organizer shortcuts) that aren't in the DB
+            if (user == null)
+            {
+                user = new IdentityUser
+                {
+                    UserName = userName ?? email ?? "Organiser",
+                    Email = email ?? "organiser@test.com",
+                    PhoneNumber = string.Empty
+                };
+            }
+
+            return user;
+        }
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return NotFound();
+            var role = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(role))
+                return RedirectToAction("Login", "Account");
+
+            var user = await GetCurrentUserAsync();
             return View(user);
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateProfile(string phoneNumber)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(string phoneNumber, IFormFile profilePicture)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var role = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(role))
+                return RedirectToAction("Login", "Account");
+
+            var email = HttpContext.Session.GetString("UserEmail");
+            var user = !string.IsNullOrEmpty(email) ? await _userManager.FindByEmailAsync(email) : null;
+
             if (user != null)
             {
                 user.PhoneNumber = phoneNumber;
                 await _userManager.UpdateAsync(user);
-                TempData["SuccessMessage"] = "Profile updated successfully.";
             }
+
+            if (profilePicture != null && profilePicture.Length > 0)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await profilePicture.CopyToAsync(memoryStream);
+                    var base64 = Convert.ToBase64String(memoryStream.ToArray());
+                    var imgSrc = $"data:{profilePicture.ContentType};base64,{base64}";
+                    HttpContext.Session.SetString("UserProfileImage", imgSrc);
+                }
+            }
+
+            TempData["SuccessMessage"] = "Profile updated successfully.";
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var role = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(role))
+                return RedirectToAction("Login", "Account");
+
+            var email = HttpContext.Session.GetString("UserEmail");
+            var user = !string.IsNullOrEmpty(email) ? await _userManager.FindByEmailAsync(email) : null;
+
             if (user != null)
             {
                 var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
@@ -53,7 +110,13 @@ namespace Race_System_2_.Controllers
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
-            return View("Index", user);
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Password changes require a registered database account.");
+            }
+
+            var currentUser = await GetCurrentUserAsync();
+            return View("Index", currentUser);
         }
     }
 }

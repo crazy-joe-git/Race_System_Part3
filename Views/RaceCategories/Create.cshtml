@@ -1,37 +1,37 @@
 ﻿@model Race_System_2_.Models.RaceCategoryViewModel
 @{
-    ViewData["Title"] = "Add Category";
+    ViewData["Title"] = "Create Race Category";
 }
 
-<div class="row justify-content-center py-4">
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-                <h2 class="fw-bold text-primary mb-3">Add Race Category</h2>
-                <form asp-action="Create" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="container py-3">
+    <h2 class="fw-bold mb-3">Create Race Category</h2>
 
-                    <div class="mb-3">
-                        <label asp-for="CategoryName" class="form-label fw-semibold">Category Name</label>
-                        <input asp-for="CategoryName" class="form-control" placeholder="e.g. Senior Open, Junior 5km" required />
-                    </div>
+    <div class="card shadow-sm border-0 p-4" style="max-width: 600px;">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="Distance" class="form-label fw-semibold">Distance (km)</label>
-                        <input asp-for="Distance" class="form-control" type="number" step="0.1" placeholder="e.g. 5 or 21.1" required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="CategoryDescription" class="form-label fw-semibold">Description</label>
-                        <textarea asp-for="CategoryDescription" class="form-control" rows="3" placeholder="Category details..."></textarea>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2">
-                        <a asp-action="Index" class="btn btn-light fw-bold px-4">Cancel</a>
-                        <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm">Save Category</button>
-                    </div>
-                </form>
+            <div class="mb-3">
+                <label asp-for="CategoryName" class="form-label fw-semibold">Category Name</label>
+                <input asp-for="CategoryName" class="form-control" placeholder="e.g. 10km Road Race" required />
+                <span asp-validation-for="CategoryName" class="text-danger"></span>
             </div>
-        </div>
+
+            <div class="mb-3">
+                <label asp-for="Distance" class="form-label fw-semibold">Distance (km)</label>
+                <input asp-for="Distance" class="form-control" type="number" step="0.1" placeholder="10.0" required />
+                <span asp-validation-for="Distance" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CategoryDescription" class="form-label fw-semibold">Description</label>
+                <textarea asp-for="CategoryDescription" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="CategoryDescription" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">Save Category</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
     </div>
 </div>

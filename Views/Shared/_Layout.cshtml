@@ -1,6 +1,10 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+﻿@{
+    var userRole = Context.Session.GetString("UserRole");
+    var token = Context.Session.GetString("JWTToken");
+    bool isLoggedIn = !string.IsNullOrEmpty(userRole) || !string.IsNullOrEmpty(token);
+    bool isOrganiser = userRole == "Organiser" || userRole == "Organizer";
+    var userName = Context.Session.GetString("UserName") ?? "User";
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -31,12 +35,15 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Events" asp-action="Index">Browse Races</a>
                         </li>
-                        @if (SignInManager.IsSignedIn(User))
+                        @if (isLoggedIn)
                         {
-                            if (User.IsInRole("Organiser"))
+                            @if (isOrganiser)
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark fw-semibold" asp-controller="Events" asp-action="OrganizerDashboard">Dashboard</a>
+                                    <a class="nav-link text-dark" asp-controller="RaceCategories" asp-action="Index">Categories</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Results" asp-action="Capture">Capture Results</a>
                                 </li>
                             }
                             else
@@ -47,14 +54,14 @@
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-controller="Results" asp-action="MyResults">My Results</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Profile" asp-action="Index">Profile</a>
-                                </li>
                             }
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Profile" asp-action="Index">Profile</a>
+                            </li>
                         }
                     </ul>
                     <div class="d-flex align-items-center">
-                        @if (SignInManager.IsSignedIn(User))
+                        @if (isLoggedIn)
                         {
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px; overflow: hidden; flex-shrink: 0;">
@@ -64,10 +71,10 @@
                                     }
                                     else
                                     {
-                                        <span>@(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")</span>
+                                        <span>@(userName.Substring(0, 1).ToUpper())</span>
                                     }
                                 </div>
-                                <span class="fw-semibold text-dark small text-truncate" style="max-width: 150px;">@User.Identity?.Name</span>
+                                <span class="fw-semibold text-dark small text-truncate" style="max-width: 150px;">@userName</span>
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
                                     <button type="submit" class="btn btn-outline-danger btn-sm px-3">Sign Out</button>
                                 </form>
@@ -87,81 +94,9 @@
     </header>
 
     <div class="container py-3">
-        @{
-            var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-            var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-
-            bool isParticipantSidebar = SignInManager.IsSignedIn(User) && !User.IsInRole("Organiser") &&
-            (currentController == "Registrations" || currentController == "Results" || currentController == "Profile");
-
-            bool isOrganizerSidebar = SignInManager.IsSignedIn(User) && User.IsInRole("Organiser") &&
-            (currentController == "Events" || currentController == "RaceCategories");
-        }
-
-        @if (isParticipantSidebar)
-        {
-            <div class="row">
-                <div class="col-md-3 mb-4">
-                    <div class="card shadow-sm border-0 rounded-3 p-3 bg-light">
-                        <h5 class="fw-bold text-dark mb-3 px-2">Participant Dashboard</h5>
-                        <div class="list-group list-group-flush rounded-3 overflow-hidden">
-                            <a asp-controller="Registrations" asp-action="MyEvents" class="list-group-item list-group-item-action py-3 px-3 border-0 d-flex align-items-center gap-3">
-                                <i class="fa-solid fa-ticket text-primary"></i>
-                                <span class="fw-medium">My Enrolled Races</span>
-                            </a>
-                            <a asp-controller="Results" asp-action="MyResults" class="list-group-item list-group-item-action py-3 px-3 border-0 d-flex align-items-center gap-3">
-                                <i class="fa-solid fa-medal text-primary"></i>
-                                <span class="fw-medium">My Results</span>
-                            </a>
-                            <a asp-controller="Profile" asp-action="Index" class="list-group-item list-group-item-action py-3 px-3 border-0 d-flex align-items-center gap-3">
-                                <i class="fa-solid fa-user-gear text-primary"></i>
-                                <span class="fw-medium">Profile Settings</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <main role="main" class="pb-3">
-                        @RenderBody()
-                    </main>
-                </div>
-            </div>
-        }
-        else if (isOrganizerSidebar)
-        {
-            <div class="row">
-                <div class="col-md-3 mb-4">
-                    <div class="card shadow-sm border-0 rounded-3 p-3 bg-light">
-                        <h5 class="fw-bold text-dark mb-3 px-2">Organizer Dashboard</h5>
-                        <div class="list-group list-group-flush rounded-3 overflow-hidden">
-                            <a asp-controller="Events" asp-action="OrganizerDashboard" class="list-group-item list-group-item-action py-3 px-3 border-0 d-flex align-items-center gap-3">
-                                <i class="fa-solid fa-chart-line text-primary"></i>
-                                <span class="fw-medium">Dashboard Overview</span>
-                            </a>
-                            <a asp-controller="Events" asp-action="Create" class="list-group-item list-group-item-action py-3 px-3 border-0 d-flex align-items-center gap-3">
-                                <i class="fa-solid fa-circle-plus text-primary"></i>
-                                <span class="fw-medium">Create New Event</span>
-                            </a>
-                            <a asp-controller="Profile" asp-action="Index" class="list-group-item list-group-item-action py-3 px-3 border-0 d-flex align-items-center gap-3">
-                                <i class="fa-solid fa-user-gear text-primary"></i>
-                                <span class="fw-medium">Profile Settings</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <main role="main" class="pb-3">
-                        @RenderBody()
-                    </main>
-                </div>
-            </div>
-        }
-        else
-        {
-            <main role="main" class="pb-3">
-                @RenderBody()
-            </main>
-        }
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
     </div>
 
     <footer class="border-top footer text-muted mt-5 py-3">
