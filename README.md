@@ -15,7 +15,7 @@ Race_System implements strict Role-Based Access Control (RBAC) to tailor the exp
    - Log and verify official finish times and results.
 
 2. **Participants:**
-   	- Browse upcoming races and view detailed event information.
+   - Browse upcoming races and view detailed event information.
    - Register and enrol in race categories securely.
    - Track personal entries, milestones, and review past race history.
    - Manage personal profile settings and view official results.
@@ -40,28 +40,23 @@ In Part 2, the architectural blueprints were transformed into a fully functional
 
 ---
 
+## Part 3: Containerisation, Deployment & Cloud Integration
+In Part 3, the application was production-ready through containerization, continuous integration automation, and cloud asset storage:
+- **Docker Containerisation:** Multi-stage `Dockerfile` built on .NET 8.0 SDK and ASP.NET runtime images, ensuring consistent deployment environments across host systems.
+- **CI/CD Automation:** GitHub Actions pipeline (`ci.yml`) automatically executes dependency restoration, build verification, and automated unit tests upon code pushes and pull requests.
+- **Cloud Storage (Azure Blob Storage):** Integrated cloud blob storage for managing user profile assets, media uploads, and document artifacts securely.
+
+---
+
 ## Setup and Run Instructions
 
 ### Prerequisites
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed on your machine.
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) (with ASP.NET and web development workload) or VS Code.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (optional, for containerized runs).
 
-### Running the Application Locally
+### Running the Application Locally via Visual Studio
 1. **Clone the Repository:**
    ```bash
    git clone [https://github.com/crazy-joe-git/Race_System-2-.git](https://github.com/crazy-joe-git/Race_System-2-.git)
    cd Race_System-2-
-
-## Containerisation & Deployment
-
-To build and run the ASP.NET Core MVC front-end application inside a Docker container, execute the following commands from the project root directory:
-
-### Build the Docker Image
-docker build -t racesystem-mvc -f Dockerfile .
-
-### Run the Container
-docker run -d -p 8080:8080 --name racesystem-app racesystem-mvc
-
-### Successful Green Build Screenshot
-![CI/CD Workflow Status](CI%20workflow.png)
-
