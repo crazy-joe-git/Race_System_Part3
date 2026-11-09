@@ -69,7 +69,7 @@ namespace Race_System_2_.Controllers
         // POST: /Events/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(EventViewModel model, IFormFile? bannerImage)
+        public async Task<IActionResult> Create([FromForm] EventViewModel model, IFormFile bannerImage)
         {
             var role = HttpContext.Session.GetString("UserRole");
             if (role != "Organiser" && role != "Organizer")

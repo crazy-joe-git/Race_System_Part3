@@ -14,6 +14,7 @@ namespace Race_System_2_.Models
         [Display(Name = "Event Name")]
         public string EventName { get; set; } = string.Empty;
 
+        [Required]
         [Display(Name = "Description")]
         public string Description { get; set; } = string.Empty;
 
@@ -31,10 +32,13 @@ namespace Race_System_2_.Models
 
         [Required]
         [Display(Name = "Event Type")]
-        public string EventType { get; set; } = string.Empty; // e.g., Run, Walk, Cycle
+        public string EventType { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Organizer Name")]
         public string OrganizerName { get; set; } = string.Empty;
+
+        [Display(Name = "Banner URL")]
+        public string BannerUrl { get; set; } = string.Empty;
     }
 }

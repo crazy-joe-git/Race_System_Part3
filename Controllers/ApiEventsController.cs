@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Race_System_2_.Data;
 using Race_System_2_.Models;
 
@@ -15,10 +19,12 @@ namespace Race_System_2_.Controllers
     public class ApiEventsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public ApiEventsController(ApplicationDbContext context)
+        public ApiEventsController(ApplicationDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         // GET: api/ApiEvents
@@ -43,7 +49,6 @@ namespace Race_System_2_.Controllers
         }
 
         // PUT: api/ApiEvents/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEvent(int id, Event @event)
         {
@@ -74,10 +79,57 @@ namespace Race_System_2_.Controllers
         }
 
         // POST: api/ApiEvents
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Event>> PostEvent(Event @event)
+        public async Task<ActionResult<Event>> PostEvent(
+            [FromForm] string eventName,
+            [FromForm] string description,
+            [FromForm] DateTime eventDate,
+            [FromForm] string eventLocation,
+            [FromForm] double distance,
+            [FromForm] string eventType,
+            [FromForm] string organizerName,
+            IFormFile bannerImage)
         {
+            string bannerUrl = string.Empty;
+
+            if (bannerImage != null && bannerImage.Length > 0)
+            {
+                // Read Azure Storage connection string from appsettings.json
+                var connectionString = _configuration["AzureStorageConnectionString"] ?? _configuration.GetConnectionString("AzureStorage");
+                var containerName = "event-banners";
+
+                if (!string.IsNullOrEmpty(connectionString))
+                {
+                    var blobServiceClient = new BlobServiceClient(connectionString);
+                    var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+                    // Ensure the container exists and allows public blob read access
+                    await containerClient.CreateIfNotExistsAsync();
+
+                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(bannerImage.FileName);
+                    var blobClient = containerClient.GetBlobClient(uniqueFileName);
+
+                    using (var stream = bannerImage.OpenReadStream())
+                    {
+                        await blobClient.UploadAsync(stream, true);
+                    }
+
+                    bannerUrl = blobClient.Uri.ToString();
+                }
+            }
+
+            var @event = new Event
+            {
+                EventName = eventName,
+                Description = description,
+                EventDate = eventDate,
+                EventLocation = eventLocation,
+                Distance = distance,
+                EventType = eventType,
+                OrganizerName = organizerName,
+                BannerUrl = bannerUrl
+            };
+
             _context.Events.Add(@event);
             await _context.SaveChangesAsync();
 
