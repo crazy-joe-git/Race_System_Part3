@@ -43,8 +43,12 @@ In Part 2, the architectural blueprints were transformed into a fully functional
 ## Part 3: Containerisation, Deployment & Cloud Integration
 In Part 3, the application was production-ready through containerization, continuous integration automation, and cloud asset storage:
 - **Docker Containerisation:** Multi-stage `Dockerfile` built on .NET 8.0 SDK and ASP.NET runtime images, ensuring consistent deployment environments across host systems.
+- ![Docker Container Running](C:\Users\Student\source\repos\Race_System(2)\Docker App.png)
+- ![Docker Container Running % the site being active](C:\Users\Student\source\repos\Race_System(2)\Docker & Site.png)
 - **CI/CD Automation:** GitHub Actions pipeline (`ci.yml`) automatically executes dependency restoration, build verification, and automated unit tests upon code pushes and pull requests.
+- ![CI/CD Automation](C:\Users\Student\source\repos\Race_System(2)\CI Github Workflow.png)
 - **Cloud Storage (Azure Blob Storage):** Integrated cloud blob storage for managing user profile assets, media uploads, and document artifacts securely.
+- ![Azure Blob Storage Integration](C:\Users\Student\source\repos\Race_System(2)\Azure.png)]
 
 ---
 
